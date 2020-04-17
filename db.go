@@ -72,14 +72,15 @@ func (app *app) initDB() error {
 
 // getFileIDByID checks for a given ID in an archive, if it exists we'll
 // return the fileID for that file.
-func (app *app) getFileIDByID(name, id string) string {
+func (app *app) getFileIDByID(name, id string) (string, bool) {
 	var fileID string
+	var fileExists bool
 	app.queryRow(`
-		SELECT file_id
+		SELECT file_id, 1
 		FROM archive_item
 		WHERE archive = ? AND id = ? AND deleted_at IS NULL
-	`, name, id).Scan(&fileID)
-	return fileID
+	`, name, id).Scan(&fileID, &fileExists)
+	return fileID, fileExists
 }
 
 // getFileIDByMD5Sum checks for a given MD5sum in an archive, if it exists

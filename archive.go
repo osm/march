@@ -33,7 +33,7 @@ func (app *app) getArchiveFromURL(url string) *Archive {
 // getArchiveItemIDFromURL tries to extract an archive item ID from the given
 // URL, if it exists we'll return a pointer to a file description that
 // contains the requested file.
-func (app *app) getArchiveItemFromURL(url string) *os.File {
+func (app *app) getArchiveItemFromURL(url string) (*os.File, bool) {
 	// Split the URL on slashes.
 	parts := strings.Split(url[1:], "/")
 
@@ -41,7 +41,7 @@ func (app *app) getArchiveItemFromURL(url string) *os.File {
 	// should be the archive name and the second part is the id of the
 	// archived item.
 	if len(parts) != 2 {
-		return nil
+		return nil, false
 	}
 
 	// Give the parts a name, to improve code readability.
@@ -50,27 +50,27 @@ func (app *app) getArchiveItemFromURL(url string) *os.File {
 
 	// Make sure that the archive exists before we proceed.
 	if _, ok := app.archives[name]; !ok {
-		return nil
+		return nil, false
 	}
 
 	// ... and make sure that the given ID is a valid UUID.
 	if !isUUID(id) {
-		return nil
+		return nil, false
 	}
 
 	// ... and verify that the file actually exists in the database.
-	fileID := app.getFileIDByID(name, id)
+	fileID, fileExists := app.getFileIDByID(name, id)
 	if fileID == "" {
-		return nil
+		return nil, fileExists
 	}
 
 	// And finally, make sure that the physical file actually exists.
 	file, err := os.Open(path.Join(app.archives[name].Storage, fileID))
 	if err != nil {
-		return nil
+		return nil, fileExists
 	}
 
-	return file
+	return file, fileExists
 }
 
 // archive downloads and stores the given URL in the archive.
@@ -80,6 +80,11 @@ func (app *app) archive(archive *Archive, url, id string) {
 	// routine.
 	for _, ar := range app.archivers {
 		if ar.regexp.Match([]byte(url)) {
+			// Define variables that will be used within this context.
+			var err error
+			var fileID string
+			var md5 string
+
 			// Construct a path of the file we want to archive.
 			file := path.Join(archive.Storage, id)
 
@@ -89,14 +94,14 @@ func (app *app) archive(archive *Archive, url, id string) {
 			cmd := exec.Command(ar.Script, url, file)
 			if err := cmd.Run(); err != nil {
 				app.logger.Printf("failed to execute script: %s, %s, %s, raw error: %w", ar.Script, url, file, err)
-				return
+				goto addToArchive
 			}
 
 			// Calculate a md5sum of the archived file.
-			md5sum, err := md5sum(file)
+			md5, err = md5sum(file)
 			if err != nil {
 				app.logger.Printf("md5sum failed for %s", file)
-				return
+				goto addToArchive
 			}
 
 			// Fetch the file ID based on the md5sum.
@@ -106,7 +111,7 @@ func (app *app) archive(archive *Archive, url, id string) {
 			// returned to the requestor.
 			// So we link the same file id to another id in the
 			// database.
-			fileID := app.getFileIDByMD5Sum(archive.Name, md5sum)
+			fileID = app.getFileIDByMD5Sum(archive.Name, md5)
 			if fileID == "" {
 				fileID = id
 			} else {
@@ -114,12 +119,11 @@ func (app *app) archive(archive *Archive, url, id string) {
 			}
 
 			// Add the file to the archive.
-			if err := app.addToArchive(id, fileID, archive.Name, url, md5sum); err != nil {
+		addToArchive:
+			if err := app.addToArchive(id, fileID, archive.Name, url, md5); err != nil {
 				app.logger.Printf("add to archive failed: %w", err)
 				return
 			}
-
-			return
 		}
 	}
 }

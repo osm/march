@@ -13,6 +13,11 @@ func (app *app) notFound(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Not Found", http.StatusNotFound)
 }
 
+// noContent returns a no content http error.
+func (app *app) noContent(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "No Content", http.StatusNoContent)
+}
+
 // unauthorized returns an unauthorized http error.
 func (app *app) unauthorized(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -36,9 +41,13 @@ func (app *app) router(w http.ResponseWriter, r *http.Request) {
 // archive we'll return it, otherwise 404.
 func (app *app) get(w http.ResponseWriter, r *http.Request) {
 	// Fetch the archived item.
-	file := app.getArchiveItemFromURL(r.URL.Path)
-	if file == nil {
+	file, fileExists := app.getArchiveItemFromURL(r.URL.Path)
+	if file == nil && !fileExists {
 		app.notFound(w, r)
+		return
+	}
+	if file == nil && fileExists {
+		app.noContent(w, r)
 		return
 	}
 
