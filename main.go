@@ -47,7 +47,10 @@ func main() {
 	}
 
 	// Initialize the database.
-	app.initDB()
+	if err := app.initDB(); err != nil {
+		fmt.Println("error: migration failed", err)
+		os.Exit(1)
+	}
 
 	// Execute the HTTP server.
 	http.HandleFunc("/", app.router)

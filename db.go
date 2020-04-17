@@ -29,6 +29,30 @@ func getDBRepo() repository.Source {
 		3: `
 			CREATE INDEX archive_item_md5sum ON archive_item(md5sum);
 		`,
+		4: `
+			CREATE TEMPORARY TABLE archive_item_backup (
+				id VARCHAR(36) NOT NULL PRIMARY KEY,
+				file_id VARCHAR(36) NOT NULL,
+				archive TEXT NOT NULL,
+				url TEXT NOT NULL,
+				md5sum VARCHAR(32) NOT NULL,
+				deleted_at DATETIME,
+				created_at DATETIME NOT NULL
+			);
+			INSERT INTO archive_item_backup SELECT * FROM archive_item;
+			DROP TABLE archive_item;
+			CREATE TABLE archive_item (
+				id VARCHAR(36) NOT NULL PRIMARY KEY,
+				file_id VARCHAR(36),
+				archive TEXT NOT NULL,
+				url TEXT NOT NULL,
+				md5sum VARCHAR(32) NOT NULL,
+				deleted_at DATETIME,
+				created_at DATETIME NOT NULL
+			);
+			INSERT INTO archive_item SELECT * FROM archive_item_backup;
+			DROP TABLE archive_item_backup;
+		`,
 	})
 }
 
