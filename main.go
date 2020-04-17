@@ -53,6 +53,7 @@ func main() {
 	}
 
 	// Execute the HTTP server.
+	fmt.Println("Listening on port", app.port)
 	http.HandleFunc("/", app.router)
 	http.ListenAndServe(":"+app.port, nil)
 }
