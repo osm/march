@@ -136,5 +136,6 @@ func (app *app) post(w http.ResponseWriter, r *http.Request) {
 	go app.archive(archive, url, id)
 
 	// Write the id back to the requestor.
+	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, id+"\n")
 }
