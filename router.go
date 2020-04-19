@@ -140,5 +140,5 @@ func (app *app) post(w http.ResponseWriter, r *http.Request) {
 
 	// Write the id back to the requestor.
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, id+"\n")
+	fmt.Fprintf(w, id)
 }
