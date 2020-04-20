@@ -30,9 +30,6 @@ func (app *app) badRequest(w http.ResponseWriter, r *http.Request) {
 
 // router handles the HTTP requests coming into the app.
 func (app *app) router(w http.ResponseWriter, r *http.Request) {
-	// Log the ip address of the request and which path that was accessed.
-	app.logger.Printf("req from %v to %v", string(r.RemoteAddr), string(r.URL.Path))
-
 	if r.Method == "GET" {
 		app.get(w, r)
 	} else if r.Method == "POST" {

@@ -124,6 +124,7 @@ func (app *app) archive(archive *Archive, url, id string) {
 				app.logger.Printf("add to archive failed: %w", err)
 				return
 			}
+			app.logger.Printf("adding id: %s, file id: %s, url: %s, md5: %s to archive: %s", id, fileID, url, md5, archive.Name)
 		}
 	}
 }
