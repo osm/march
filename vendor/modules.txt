@@ -1,0 +1,14 @@
+# github.com/mattn/go-sqlite3 v2.0.3+incompatible
+## explicit
+github.com/mattn/go-sqlite3
+# github.com/osm/flen v1.0.0
+## explicit
+github.com/osm/flen
+# github.com/osm/irc v1.0.1
+## explicit
+# github.com/osm/jsonc v1.0.0
+## explicit
+# github.com/osm/migrator v1.0.1
+## explicit
+github.com/osm/migrator
+github.com/osm/migrator/repository
